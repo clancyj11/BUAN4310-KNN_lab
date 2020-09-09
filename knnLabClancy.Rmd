@@ -1,0 +1,135 @@
+---
+title: "KNN_Lab_Clancy"
+author: "Joey Clancy"
+date: "9/8/2020"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Setup and Preprocessing
+```{r clear-environment, echo = FALSE}
+# Clear environment of variables and functions
+rm(list = ls(all = TRUE))
+
+# Clear environmet of packages
+if (is.null(sessionInfo()$otherPkgs) == FALSE) lapply(paste("package:", names(sessionInfo()$otherPkgs), sep = ""), detach, character.only = TRUE, unload = TRUE)
+```
+
+# Import libraries
+```{r message = FALSE}
+library(caTools)
+library(caret)
+library(FNN)
+library(class)
+```
+
+# Import data and remove unwanted columns
+```{r}
+df = read.csv("UniversalBank.csv")
+df <- df[ , -c(1, 5)]
+names(df)
+```
+
+# Checking data type for each variable
+```{r}
+str(df)
+# Data types are as expected.
+```
+
+# Train test split
+```{r}
+set.seed(666)
+split <-  sample.split(df$Personal.Loan, SplitRatio = 0.6)
+training_set <-  subset(df, split == TRUE)
+test_set <- subset(df, split == FALSE)
+```
+
+# Feature scaling
+```{r}
+norm_values <- preProcess(training_set[, -8],
+                          method = c("center",
+                                     "scale"))
+
+training_set[, -8] <- predict(norm_values,
+                            training_set[, -8])
+head(training_set)
+```
+# Normalize the test set
+```{r}
+test_set[, -8] <- predict(norm_values,
+                          test_set[, -8])
+
+head(test_set)
+```
+
+# Build KNN Function
+```{r}
+knnBuild <- function(name, Knum) {
+  name <- knn(train = training_set[, -8],
+              test = test_set[, -8],
+              cl = training_set[, 8],
+              k = Knum)
+  confusionMatrix(name, as.factor(test_set[, 8]))
+}
+
+# K == 3 turned out to perform the best
+```
+
+# KNN Model with K == 3
+```{r}
+knnBuild(K3, 3)
+```
+
+# KNN Model with K == 5
+```{r}
+knnBuild(K5, 5)
+```
+
+# KNN Model with K == 7
+```{r}
+knnBuild(K5, 7)
+```
+
+# KNN Model with K == 9
+```{r}
+knnBuild(K9, 9)
+```
+
+# Create new customer
+```{r}
+newCustomer <- data.frame(Age = 40,
+                          Experience = 10,
+                          Income = 84,
+                          Family = 2,
+                          CCAvg = 2,
+                          Education = 2,
+                          Mortgage = 0,
+                          Securities.Account = 0,
+                          CD.Account = 0,
+                          Online = 1,
+                          CreditCard = 1)
+newCustomer
+```
+
+# Normalize new customer data
+```{r}
+newCustomer <- predict(norm_values, newCustomer)
+newCustomer
+```
+
+# Run KNN on new customer data
+```{r}
+customKNN <- knn(train = training_set[, -8],
+              test = newCustomer,
+              cl = training_set[, 8],
+              k = 3)
+customKNN
+
+# The KNN predicts that the new customer will not accept the loan offer
+```
+

@@ -32,6 +32,11 @@ library(class)
 ```{r}
 df = read.csv("UniversalBank.csv")
 df <- df[ , -c(1, 5)]
+
+# Make Personal Loan Variable Neat
+df$Personal.Loan <- factor(df$Personal.Loan,
+                           levels = c("0", "1"),
+                           labels = c("No", "Yes"))
 names(df)
 ```
 
